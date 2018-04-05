@@ -2,6 +2,7 @@ import paramiko
 import time
 import re
 import subprocess
+import os
 
 # To check IP addresses mentioned in file are valid or not
 def valid_ip():
@@ -62,5 +63,17 @@ def valid_ip():
         print "Oh! Devices are not reachable. Please check IP addresses and connectivity again.\n"
         #valid_ip()
 
+# Check for credential's file is available or not
+
+def credential_file():
+    global cred_file
+    cred_file = raw_input("\n Enter filename where credentials are stored: ")
+    while True:
+        if os.path.isfile(cred_file) == True:
+            break
+        else:
+            print "\n File does not exist. Please try again.\n"
+            continue
 
 valid_ip()
+credential_file()
