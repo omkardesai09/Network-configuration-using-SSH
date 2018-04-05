@@ -2,7 +2,8 @@ import paramiko
 import time
 import re
 import subprocess
-import os
+import os.path
+import sys
 
 # To check IP addresses mentioned in file are valid or not
 def valid_ip():
@@ -67,9 +68,21 @@ def valid_ip():
 
 def credential_file():
     global cred_file
-    cred_file = raw_input("\n Enter filename where credentials are stored: ")
+
     while True:
+        cred_file = raw_input("\n Enter filename where credentials are stored: ")
         if os.path.isfile(cred_file) == True:
+            break
+        else:
+            print "\n File does not exist. Please try again.\n"
+            continue
+
+def command_file():
+    global cmd_file
+
+    while True:
+        cmd_file = raw_input("\n Enter filename where commands are stored: ")
+        if os.path.isfile(cmd_file) == True:
             break
         else:
             print "\n File does not exist. Please try again.\n"
@@ -77,3 +90,54 @@ def credential_file():
 
 valid_ip()
 credential_file()
+command_file()
+
+# Function to setup SSH connection with all devices
+def ssh_conn(ip):
+    file2 = open(cred_file, 'r')
+    file2.seek(0)
+    username = file2.readlines()[0].split(",")[0]
+    file2.seek(0)
+    password = file2.readlines()[0].split(",")[1].rstrip('\n')
+
+    # Logging into device
+    session = paramiko.SSHClient()
+    session.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    # Connect to a device using username and password
+    session.connect(ip, username = username, password = password)
+
+    # Invoke shell inside device
+    conn = session.invoke_shell()
+
+    # Write following command on device's shell using send function
+    conn.send('enable\n')
+    time.sleep(1)
+    conn.send(password + '\n')
+    time.sleep(1)
+    conn.send('terminal length 0\n')
+    time.sleep(1)
+    conn.send('sh run | include int\n')
+    time.sleep(1)
+
+    # Open Command file to configure devices
+    file3 = open(cmd_file, 'r')
+    file3.seek(0)
+    '''for lines in file3.readlines():
+        conn.send(lines + '\n')
+        time.sleep(2)'''
+
+    # Close credentials and command file
+    file2.close()
+    file3.close()
+
+    # Checking shell output of device and print on local host
+    output = conn.recv(65535)
+    time.sleep(1)
+    print output + '\n'
+    session.close()
+
+
+for ip in list_of_ip:
+    ssh_conn(ip)
+    time.sleep(5)
