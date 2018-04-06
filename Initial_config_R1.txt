@@ -1,0 +1,30 @@
+!
+configure terminal
+!
+!
+enable secret cisco
+!
+!
+username omkar password cisco
+!
+!
+interface fastEthernet0/0
+ip address 192.168.2.10 255.255.255.0
+no shut
+exit
+!
+!
+line vty 0 935
+login local
+exit
+!
+!
+ip domain-name topology
+crypto key generate rsa
+1024
+!
+!
+exit
+wr
+!
+!
