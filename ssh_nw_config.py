@@ -4,6 +4,7 @@ import re
 import subprocess
 import os.path
 import sys
+import threading
 
 # To check IP addresses mentioned in file are valid or not
 def valid_ip():
@@ -66,6 +67,7 @@ def valid_ip():
 
 # Check for credential's file is available or not
 
+
 def credential_file():
     global cred_file
 
@@ -76,6 +78,7 @@ def credential_file():
         else:
             print "\n File does not exist. Please try again.\n"
             continue
+
 
 def command_file():
     global cmd_file
@@ -93,6 +96,7 @@ credential_file()
 command_file()
 
 # Function to setup SSH connection with all devices
+
 def ssh_conn(ip):
     file2 = open(cred_file, 'r')
     file2.seek(0)
@@ -117,15 +121,15 @@ def ssh_conn(ip):
     time.sleep(1)
     conn.send('terminal length 0\n')
     time.sleep(1)
-    conn.send('sh run | include int\n')
-    time.sleep(1)
+    #conn.send('sh run | include int\n')
+    #time.sleep(1)
 
     # Open Command file to configure devices
     file3 = open(cmd_file, 'r')
     file3.seek(0)
-    '''for lines in file3.readlines():
+    for lines in file3.readlines():
         conn.send(lines + '\n')
-        time.sleep(2)'''
+        time.sleep(2)
 
     # Close credentials and command file
     file2.close()
@@ -137,7 +141,15 @@ def ssh_conn(ip):
     print output + '\n'
     session.close()
 
+# Implement threading
 
-for ip in list_of_ip:
-    ssh_conn(ip)
-    time.sleep(5)
+def thread_func():
+    thread = []
+    for ip in list_of_ip:
+        th = threading.Thread(target = ssh_conn, args = (ip,))
+        th.start()
+        thread.append(th)
+    for th in thread:
+        th.join()
+
+thread_func()
